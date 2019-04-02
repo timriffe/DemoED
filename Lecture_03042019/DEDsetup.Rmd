@@ -1,0 +1,72 @@
+---
+title: "Demographic Exploration and Discovery (with R): Setup"
+author: "Tim Riffe"
+date: "April 2, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Getting set up
+
+## Reference book
+We will make reference to the book "Data Visualization: A practical introduction" by Kieran Healy. You can buy it online if you want, or you can refer to the open version at [https://socviz.co](https://socviz.co). There are also links to purchase the book at that site, if that's your intent. This book is so fresh, well written, and useful: it's the only book that gives both *theory* and *code* for visualization, and it's also using the newest *tidy* programming paradigms, which is probably the best way to get started nowadays.
+
+If you already are an R user but are not a *tidyverse* freak, then you and I are in the same boat. If you actually already are a *tidyverse* freak then I expect you'll still enjoy this course.
+
+## Software
+
+### Inkscape
+This is a free vector graphics editor. If you happen to have Adobe Illustrator then that is fine too, but I personally use Inkscape. It's quite capable and easy enough to figure out.
+[https://inkscape.org/](https://inkscape.org/)
+
+### R
+You don't need any background in R to take this course. I don't even assume you know yet where the fancy keys on the keyboard are yet. But I assume you can manage to get the latest version installed.
+[https://cran.r-project.org/](https://cran.r-project.org/)
+
+### RStudio
+This is the best way to *use* R. It will be our work environment for this course. Unless you're already using something else that works for you.
+[https://www.rstudio.com/](https://www.rstudio.com/)
+
+# Start using R and RStudio
+
+First you need to decide where (a directory) you'll keep all your course materials. Make a good decision. Some place stable that won't disappear part way through the semester. Choose File - New - R script , and call it something like *setup.R*. Then you'll want to type in the stuff in these code blocks, select it, and press ctrl + enter. We'll do this together in class. 
+
+# R packages to install
+
+### packages used in socviz book
+```{r,eval=FALSE}
+my_packages <- c("tidyverse","broom","coefplot","cowplot",
+				 "gapminder","GGally","ggrepel","ggridges","gridExtra",
+				 "here","interplot","margins","maps","mapproj",
+				 "mapdata","MASS","quantreg","rlang","scales",
+				 "survey","srvyr","viridis","viridisLite","devtools")
+install.packages(my_packages, repos = "http://cran.rstudio.com")
+```
+
+### the *socviz* package
+
+This package belongs to the book
+```{r, eval = FALSE}
+library(devtools)
+install_github("kjhealy/socviz")
+```
+
+### R packages for doing demography
+
+We will likely use at least some of these at some point during the course, so best get them installed early in case there are issues.
+```{r, eval = FALSE}
+random_demog_packages <- c("MortalitySmooth","ungroup","HMDHFDplus",
+						   "DemoDecomp","MortalityLaws")
+install.packages(random_demog_packages, repos = "http://cran.rstudio.com")
+
+library(devtools)
+install_github("mpascariu/MortalityEstimate")
+install_github("timriffe/DemoTools")
+
+```
+
+
+
