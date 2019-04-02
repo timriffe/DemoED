@@ -408,9 +408,8 @@ $(document).ready(function () {
 <div id="start-using-r-and-rstudio" class="section level1">
 <h1>Start using R and RStudio</h1>
 <p>First you need to decide where (a directory) you’ll keep all your course materials. Make a good decision. Some place stable that won’t disappear part way through the semester. Choose File - New - R script , and call it something like <em>setup.R</em>. Then you’ll want to type in the stuff in these code blocks, select it, and press ctrl + enter. We’ll do this together in class.</p>
-</div>
-<div id="r-packages-to-install" class="section level1">
-<h1>R packages to install</h1>
+<div id="r-packages-to-install" class="section level2">
+<h2>R packages to install</h2>
 <div id="packages-used-in-socviz-book" class="section level3">
 <h3>packages used in socviz book</h3>
 <pre class="r"><code>my_packages &lt;- c(&quot;tidyverse&quot;,&quot;broom&quot;,&quot;coefplot&quot;,&quot;cowplot&quot;,
@@ -436,6 +435,13 @@ install.packages(random_demog_packages, repos = &quot;http://cran.rstudio.com&qu
 library(devtools)
 install_github(&quot;mpascariu/MortalityEstimate&quot;)
 install_github(&quot;timriffe/DemoTools&quot;)</code></pre>
+</div>
+<div id="rstudio-addins" class="section level3">
+<h3>Rstudio addins</h3>
+<pre class="r"><code>install.packages(&quot;addinslist&quot;)
+library(devtools)
+install_github(&quot;seasmith/AlignAssign&quot;)</code></pre>
+</div>
 </div>
 </div>
 

@@ -1,8 +1,10 @@
 ---
-title: "Demographic Exploration and Discovery (with R): Setup"
+title: 'Demographic Exploration and Discovery (with R): Setup'
 author: "Tim Riffe"
 date: "April 2, 2019"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,7 +36,9 @@ This is the best way to *use* R. It will be our work environment for this course
 
 First you need to decide where (a directory) you'll keep all your course materials. Make a good decision. Some place stable that won't disappear part way through the semester. Choose File - New - R script , and call it something like *setup.R*. Then you'll want to type in the stuff in these code blocks, select it, and press ctrl + enter. We'll do this together in class. 
 
-# R packages to install
+
+
+## R packages to install
 
 ### packages used in socviz book
 ```{r,eval=FALSE}
@@ -68,5 +72,12 @@ install_github("timriffe/DemoTools")
 
 ```
 
+
+### Rstudio addins 
+```{r, eval = FALSE}
+install.packages("addinslist")
+library(devtools)
+install_github("seasmith/AlignAssign")
+```
 
 
