@@ -1,3 +1,4 @@
 # DemoED
 Demographic Exploration and Discovery (with R)
-adding a line
+
+Individual sessions notebooks will go into folders labelled *Lecture_DDMMYYY*. 
