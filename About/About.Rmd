@@ -1,0 +1,58 @@
+---
+title: 'Demographic Exploration and Discovery (with R): About'
+author: "Tim Riffe"
+date: "April 2, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Objectives
+This is a course about *seeing* data, about getting comfortable with asking data questions and getting preliminary answers from it, by looking at it. Some things are taken for granted as true in demography. How do we know them anyway? Visualization happens in different ways at each stage of the research process. Let's talk about it in a deliberate way. And let curiosity drive our questions.
+
+This is *not* a course about modeling, but we might do some. This is *not* a course on formal demography, but we might do some. This is *not* a research colloquium, but there may be times where it feels like one. This is *not* a course about `R`, but it will be a good intro to `R` anyway. If you're doing these things in other courses, then this course will be a major booster. Of skills and attitude.
+
+I hope that this course may serve to support other aspects of your master program and beyong. If you take the tools from this course to heart, then you'll keep them with you forever. 
+
+# About me
+I do demography. Here some key words that might help: Mortality, health, mortality and health inequalities, decomposition, visualization, formal demography, `R` development of tools for demography. I love this stuff, like for real. I didn't always do this stuff. My undergrad was in philosophy. All the programming and math came later in life, rather at random. I jsut got over it, learned by experimenting, making mistakes, over and over. And I still do. 
+
+### meetings
+You can find me at the MPIDR. During this course you should feel somewhat entitled to ask for meetings, but always email enough in advance so that it's logistically possible. German or English are both OK for in-person meetings. Don't feel ashamed if you don't understand something, ask for help. 
+
+Email: `riffe@demogr.mpg.de`
+
+### communication and materials
+By the way, you should **send me an email** as soon as you decide you're going to take this class to declare so. I'll use email, to communicate with you. That includes cancellations, etc. I'll update a github site after each session, with prettified and annotated code. That's here:
+[https://github.com/timriffe/DemoED](https://github.com/timriffe/DemoED)
+
+I'll explain how to use that page effectively as the need arises, but otherwise you can think of it as a stash of downloadable files. It's pretty bare-bones at the moment, but you just wait.
+
+I speak and type faster when I'm excited, so you all need to raise a hand or speak up if you want me to slow down or re-explain something.
+
+### Sessions
+We have a regularly scheduled meeting time of 9:00-11:00, Wednesdays, which you've already figured out, *but* some of these sessions need to be moved because I have business trips, sorry. 
+
+Cancelled sessions (5!)
+1. 10.04
+2. 15.05
+3. 29.05
+4. 12.06 
+5. 03.07
+
+We of course need to reschedule at least four of these. I suggest to make it simple. I have three proposals to adapt the schedule, and I'll take the one that doesn't conflict with other required courses. No mixing! If you can't make these sessions because of other obligations then I'm sorry, maybe there's a solution.
+
+I propose four make-up classes (place tbd, possibly at MPIDR):
+A. Thursday 9:00-11:00: 06.06, 20.06, 27.06, 11.07
+B. Friday 9:00-11:00: 07.06, 21.06, 28.06, 12.07
+C. Thursday 15:00-17:00: 06.06, 20.06, 27.06, 11.07
+
+We need to decide this ASAP, like now.
+
+
+
+
