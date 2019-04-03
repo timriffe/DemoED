@@ -1,0 +1,55 @@
+---
+title: "Setup"
+author: "Tim Riffe"
+date: "April 3, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Setup notes
+
+First let's get some packages installed from CRAN. These are recommended by the Healy book. You should read Healy's essay "Fuck nuance".
+
+```{r, eval = FALSE}
+my_packages <- c("tidyverse","broom","coefplot","cowplot",
+				 "gapminder","GGally","ggrepel","ggridges","gridExtra", "here", "interplot","margins","maps","mapproj","mapdata","MASS","quantreg","rlang","scales","survey","srvyr","viridis","viridisLite","devtools")
+install.packages(my_packages)
+```
+
+# some demography packages
+
+This is normal text because it's not inside backticks.
+
+Put `R` code inside triple backticks. If you don't want it to actually execute when we generate this document, add the statement
+`eval = FALSE` inside the curly brackets. You need the curly brackets anyway to tell the chunk that it's `R`: `{r}`.
+```{r, eval = FALSE}
+demog_packages <- c("MortalitySmooth", "ungroup", "HMDHFDplus",
+					"DemoDecomp", "MortalityLaws")
+install.packages(demog_packages)
+```
+
+## Forthcoming
+I need to come up with a solution to install things from github without using the devtools package. Likely this will involve downloading the packages and installing them locally the old-fashioned way.
+
+## addins
+
+There are some add-ins for Rstudio that can make you life easier, like for tidying your code in certain ways.
+```{r, eval = FALSE}
+install.packages("addinslist")
+library(devtools)
+install_github("seasmith/AlignAssign")
+```
+
+
+```{r, eval = FALSE}
+
+# I aligned these using the AlignAssign addin package.
+# If you have tons of lines of code, you might want to 
+# think about that!
+IwriteCode          <- 10
+ThisISanotherObject <- 5
+```
+
