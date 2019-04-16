@@ -80,4 +80,28 @@ library(devtools)
 install_github("seasmith/AlignAssign")
 ```
 
+## Addendum: installing packages locally
 
+Some people in class were unable to use the `devtools` `install_github()` function because (probably) of the university firewall. For these cases, I've downloaded the packages and compressed them into a form that you can install locally from an `R` session, like so:
+
+```{r, eval = FALSE}
+# add path if necessary to where these files are
+install.packages("MortalityEstimate_0.9.6.tar.gz",type="Source",repos = NULL)
+install.packages("DemoTools_0.15.19.tar.gz",type="Source",repos = NULL)
+install.packages("socviz_1.0.0.9000.tar.gz",type="Source",repos = NULL)
+install.packages("AlignAssign_0.4.0.tar.gz",type="Source",repos = NULL)
+```
+
+I'll give these files to you in class. But just as an FYI, I made them using the the following steps:
+
+1) go to given the github site, e.g. `https://github.com/timriffe/DemoTools`
+2) click the green `Clone or Download` button, and select `Download ZIP`
+3) unpack the `.zip`
+4) remove `-master` from the name of the resulting folder, leaving you with a folder called, e.g., `DemoTools`
+5) in `R`, do:
+```{r, eval = FALSE}
+library(devtools)
+# extend path to location if necessary
+build("DemoTools"")
+```
+6) this creates the `.tar.gz` version that I'm giving to you on a stick. Now you know...
