@@ -3,8 +3,9 @@ title: 'Demographic Exploration and Discovery (with R): About'
 author: "Tim Riffe"
 date: "April 2, 2019"
 output:
-  html_document: default
+  word_document: default
   pdf_document: default
+  html_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,6 +35,15 @@ I'll explain how to use that page effectively as the need arises, but otherwise 
 
 I speak and type faster when I'm excited, so you all need to raise a hand or speak up if you want me to slow down or re-explain something.
 
+We will refer heavily to a particular book: K Healy (2019) *Data Visualization
+A practical introduction*, which gives both theory and code, and is well written. You can find the free online version here: [https://socviz.co/](https://socviz.co/)  
+You can also just buy it if you want. Wouldn't be a bad use of money. For at least the first several sessions, we'll follow the book closely.
+
+There are other resources out there. Another book that supplements ours is:
+C. Wilke (2019) *Fundamentals of Data Visualization: A Primer on Making Informative and Compelling Figures*, which you could buy, but which also has a free online version: [https://serialmentor.com/dataviz/](https://serialmentor.com/dataviz/). This book was also composed in R markdown, just like we're using in class. You can see the guts here: [https://github.com/clauswilke/dataviz](https://github.com/clauswilke/dataviz)
+
+I may refer to particular sections of the Wilke book, but we won't be using it per se as far as I can foresee.
+
 ### Sessions
 We have a regularly scheduled meeting time of 9:00-11:00, Wednesdays, which you've already figured out, *but* some of these sessions need to be moved because I have business trips, sorry. 
 
@@ -44,14 +54,11 @@ Cancelled sessions (5!)
 4. 12.06 
 5. 03.07
 
-We of course need to reschedule at least four of these. I suggest to make it simple. I have three proposals to adapt the schedule, and I'll take the one that doesn't conflict with other required courses. No mixing! If you can't make these sessions because of other obligations then I'm sorry, maybe there's a solution.
+These will be replaced by the following sessions, to be held at MPIDR, room 100
+Thursday 9:00-11:00: 06.06, 20.06, 27.06, 11.07
 
-I propose four make-up classes (place tbd, possibly at MPIDR):
-A. Thursday 9:00-11:00: 06.06, 20.06, 27.06, 11.07
-B. Friday 9:00-11:00: 07.06, 21.06, 28.06, 12.07
-C. Thursday 15:00-17:00: 06.06, 20.06, 27.06, 11.07
 
-We need to decide this ASAP, like now.
+
 
 
 
