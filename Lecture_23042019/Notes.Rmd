@@ -1,0 +1,25 @@
+---
+title: "Demographic exploration and discovery notes"
+author: "Tim Riffe"
+date: "April 23, 2019"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Finishing up chapter 2 of Healy (2019)[https://socviz.co/gettingstarted.html#make-your-first-figure]
+
+```{r}
+#p52 of print book
+```
+
+## Code for chapter 3
+You can find it online here [https://socviz.co/makeplot.html#makeplot]
+
+Seriously, type stuff in, no copy-pasting please!
+```{r}
+```

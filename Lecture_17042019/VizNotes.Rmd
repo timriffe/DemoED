@@ -3,9 +3,9 @@ title: "Data Visualization Notes"
 author: "Tim Riffe"
 date: '2019-01-02'
 output:
+  word_document: default
   pdf_document: default
   html_document: default
-  word_document: default
 ---
    
 ## Data Visualization Notes
@@ -16,7 +16,9 @@ This is a starter RMarkdown template to accompany *Data Visualization* (Princeto
 
 Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. A *code chunk* is a specially delimited section of the file. You can add one by moving the cursor to a blank line choosing Code > Insert Chunk from the RStudio menu. When you do, an empty chunk will appear:
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. In class, I showed how you can knit to different output types: `.pdf`, `.docx`, `.html`. They format a bit differently each, but are a good starting point. You have control over their formatting, but I'll not teach that in this course. We will be working in `.Rmd` documents for the sake of preserving our work and purging it of errors. After each session, I tidy up this document, adding notes, etc. You can take a look at it, and should tidy your own, which I guess is in your native language, whatever that happens to be.
+
+A *code chunk* is a specially delimited section of the file. You can add one by moving the cursor to a blank line choosing Code > Insert Chunk from the RStudio menu. When you do, an empty chunk will appear:
 
 ```{r}
 # here is a piece of code.
@@ -33,23 +35,8 @@ Code chunks are delimited by three backticks (found to the left of the 1 key on 
 
 ## Before you Begin
 
-To install the tidyverse, make sure you have an Internet connection. Then *manually* run the code in the chunk below. If you knit the document if will be skipped. We do this because you only need to install these packages once, not every time you run this file. Either knit the chunk using the little green "play" arrow to the right of the chunk area, or copy and paste the text into the console window.
+Before you get going with code in this and downstream sessions, please work through the installation steps outlines in the document `Lecture_03042019/Setup.pdf`, which you can find on the github site <https://github.com/timriffe/DemoED>.
 
-```{r install, eval = FALSE}
-
-## This code will not be evaluated automatically.
-## (Notice the eval = FALSE declaration in the options section of the
-## code chunk)
-
-my_packages <- c("tidyverse", "broom", "coefplot", "cowplot",
-                 "gapminder", "GGally", "ggrepel", "ggridges", "gridExtra",
-                 "here", "interplot", "margins", "maps", "mapproj",
-                 "mapdata", "MASS", "quantreg", "rlang", "scales",
-                 "survey", "srvyr", "viridis", "viridisLite", "devtools")
-
-install.packages(my_packages, repos = "http://cran.rstudio.com")
-
-```
 
 ## Set Up Your Project and Load Libraries
 
