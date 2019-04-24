@@ -1,7 +1,7 @@
 ---
 title: "Demographic exploration and discovery notes"
 author: "Tim Riffe"
-date: "April 23, 2019"
+date: "April 24, 2019"
 output:
   pdf_document: default
   html_document: default
@@ -13,13 +13,89 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Finishing up chapter 2 of Healy (2019)[https://socviz.co/gettingstarted.html#make-your-first-figure]
 
+Let's take some time to make notes about what happens in this code chunk.
+1) ggplot needs to be fed a data object
+--- specifically, a `data.frame` that is in tidy format, i.e. kind of like *long* format data, meaning one observation per row, variables in columns.
+2) we use `aes()` function to specify the *mapping*, which means that data are translated to graphical properties. So far, just x and y.
+3) what geometric form shoud it render? use `geom_*`. A vanilla Preston curve is done with `geom_point()`
+
+
+
 ```{r}
 #p52 of print book
+library(ggplot2)
+library(tidyverse)
+library(gapminder)
+
+gapminder
+
+p <- ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp))
+p <- p + geom_point()
+p
 ```
 
 ## Code for chapter 3
 You can find it online here [https://socviz.co/makeplot.html#makeplot]
 
 Seriously, type stuff in, no copy-pasting please!
+
+The `geom_point()` addition step added a *layer*  to the plot. We can add more layers, and they are literally just sitting on top of one another. So, like, we could add a smoother. Note when you execute this, it tells us that a GAM was used, and a bit more, and also selects some decent (but modifiable) graphical way of showing it.
 ```{r}
+p + geom_smooth()
 ```
+
+What if we want to change the smoother?
+```{r}
+p + geom_smooth(method = "lm")
+```{r}
+#But, it might make more sense if the axes were transformed.
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp))
+p <- p + geom_point()
+p + geom_smooth(method = "lm") + scale_x_log10() 
+
+```
+
+At this point, we've seen mapping, we've seen geom, and we've seen an axis transformation. There are already many options that we've basically ignored. So let's mess with some to get a taste.
+
+```{r}
+library(scales)
+p + 
+	geom_smooth(method = "lm") + 
+	scale_x_log10(labels = dollar)
+
+
+```
+A nice trick to clean up your axes: the `scales` package takes care of some of that formatting. Here it swaps out (unitless) scientific notation for a more human readable dollar format.
+
+Let's mess with colors. First, if you want to just tell the plot what color the points should be, do it in the geom function. Not in the mapping. Mapping, very literally translates variables in your data to graphical things. SO if you say `col="purple"` inside the `aes()` function, it will not do what you're expecting. Instead it creates a new column (temporarily) and maps it. To some other color!
+```{r}
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, y = lifeExp, col = continent)) + 
+	geom_point() + scale_x_log10()
+p
+```
+Instead, map actual variables to the colors. If we choose `continent` it will choose categorical colors. The reason it does this is because the column is in character/factor format. Factors are for categorical data, so it selects a categorical palette.
+```{r}
+library(RColorBrewer)
+display.brewer.all()
+# let's try mapping a numeric column to color
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, y = lifeExp, col = log(pop))) +
+	geom_point() + scale_x_log10()
+p
+```
+Here we mapped a numeric column to color, and since it's a value with a range, it chooses a continuous color ramp. By default blues.
+
+We will start next session by narrating the more involved aspects of chapters 3 and 4. 
+
+
+
+
+
+
+
+
+
+
+
