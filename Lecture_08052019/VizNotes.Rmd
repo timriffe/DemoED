@@ -1,0 +1,220 @@
+---
+title: "Demographic exploration and discovery notes"
+author: "Tim Riffe"
+date: "May 8, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE}
+library(ggplot2)
+library(tidyverse)
+library(gapminder)
+library(socviz)
+```
+## starting where we left off
+(2019)[https://socviz.co/gettingstarted.html#make-your-first-figure]
+
+Narrate the last code chunk from previous session:
+
+```{r}
+
+# mao to categorical column in data
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, y = lifeExp, col = continent)) + 
+	geom_point() + scale_x_log10()
+p
+# map to a numeric column in data
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, y = lifeExp, col = log(pop))) +
+	geom_point() + scale_x_log10()
+p
+```
+
+Likewise we can add a line or smoother by catgorical group:
+
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = gdpPercap, y = lifeExp, color = continent, fill = continent))
+p <- p + geom_point() + geom_smooth(method = "loess") + scale_x_log10()
+p
+```
+
+## Saving work:
+Use `ggsave()` for stuff you make using `ggplot2`. Remember you assign the plot metadata to an object (above we called it `p`, but could be any name): this object becomes the main argument to `ggsave()`, which then renders your plot according to the file specs you give. The other thing you need to do is tell is what to call the plot file you're saving to and optionally, where to put it. For that, use the `here` package-- it helps you specify file paths. Watch:
+
+```{r}
+library(here)
+here()
+# same as
+getwd() # but easier to remember!
+# where I want to save a plot (include name and extension!)
+here("Lecture_08052019","PrestonContinents.pdf")
+
+ggsave(here("Lecture_08052019","PrestonContinents.pdf"), plot = p)
+```
+
+## chapter 4
+
+First chunk [https://socviz.co/groupfacettx.html#grouped-data-and-the-group-aesthetic](https://socviz.co/groupfacettx.html#grouped-data-and-the-group-aesthetic)
+
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = year, y = gdpPercap))
+p + geom_line()
+```
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = year, y = gdpPercap, group = country))
+p + geom_line()
+# p <- ggplot(data = gapminder, mapping = aes(x = year, y = gdpPercap))
+# p + geom_line(aes(group = country))
+```
+
+Small multiples are made by facetting:
+```{r}
+p <- ggplot(data = gapminder, mapping = aes(x = year, y = gdpPercap)) +
+	geom_line(aes(group = country)) + facet_wrap(~continent)
+p
+```
+Who is that high line in the 1950s? The high line in the 1950s is Kuwait, FYI:
+```{r}
+gm1952 <- subset(gapminder,year == 1952)
+gm1952[order(gm1952$gdpPercap, decreasing = TRUE),]
+```
+
+And a bit more tweaking for axes, labels, transformations, layout:
+```{r}
+p <- ggplot(data=gapminder, mapping=aes(x=year,y=gdpPercap))
+p + geom_line(aes(group = country),color = gray(.3)) + 
+	geom_smooth(size = 1.1, method = "loess", se = FALSE) + 
+	scale_y_log10(labels = scales::dollar) +
+	facet_wrap(~continent, ncol = 5) +
+	labs(x = "Year",
+		 y = "GDP per capita",
+		 title = "GDP per capita on five continents")
+```
+
+Now the book switches to using General Social Survey (GSS) data, which is richer in variables, and which refers to weighted individuals (although we won't use the weights yet).
+
+Let's try out a more sophisticated facetting (cross-tab):
+```{r}
+glimpse(gss_sm)
+p <- ggplot(data = gss_sm, mapping = aes(x = age, y = childs))
+p + geom_point(alpha = .2) +
+	geom_smooth() +
+	facet_grid(sex~race) # use a formula
+```
+
+## new geoms
+
+Look here: [https://socviz.co/groupfacettx.html#statfunctions](https://socviz.co/groupfacettx.html#statfunctions)
+
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar()
+
+# first try proportional
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar(aes(y=..prop..))
+
+# second try proportional
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar(aes(y=..prop.., group = 1))
+```
+
+Looking at religion variable
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = religion, color = religion)) 
+p +	geom_bar()
+
+p <- ggplot(data = gss_sm, mapping = aes(x = religion, fill = religion))
+p + geom_bar() + guides(fill = FALSE)
+```
+
+Stacked bars: crude count of rows, not very informative.
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar() 
+```
+
+If you want to actually compare composition try scaling each bar to 1
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar(position="fill") 
+```
+A bit easier to compare heights, but for the middle areas still tough- when you can get away from it, side-by-side is best for comparing heights of subgroups (always with tradeoffs). Use `position="dodge"`, with `mapping = ..prop..`:
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar(position = "dodge", 
+			 mapping = aes(y = ..prop.., group = religion)) 
+```
+or we can separate regions with facetting, and then maybe colors aren't so important:
+```{r}
+p <- ggplot(data =gss_sm, mapping = aes(x = religion))
+p + geom_bar(position = "dodge", mapping = aes(y=..prop..,group = bigregion)) + facet_wrap(~bigregion, ncol = 2)
+```
+
+## Histograms and densities
+look here: [https://socviz.co/groupfacettx.html#histograms](https://socviz.co/groupfacettx.html#histograms)
+
+Now switching datasets to one that ships with `ggplot2` called `midwest`.
+```{r, echo = FALSE}
+glimpse(midwest)
+```
+
+```{r}
+p <- ggplot(data = midwest, mapping = aes(x = area))
+p + geom_histogram()
+# or an approx number of bins
+p + geom_histogram(bins = 10)
+# or a specific width
+p + geom_histogram(binwidth = .001)
+```
+
+Comparisons (here stacked, not overlapped!)
+```{r}
+oh_wi <- c("OH","WI")
+p <- ggplot(data = subset(midwest, state %in% oh_wi),
+			mapping = aes(x = percollege, fill = state))
+p + geom_histogram(alpha = 0.4, bins = 20)
+```
+
+Or a kernel (smoothed) density of a continuous variable:
+```{r}
+p <- ggplot(data = midwest, mapping = aes(x = area))
+p + geom_density()
+```
+
+And again, by groups, and will semitransparent fills:
+```{r}
+p <- ggplot(data = midwest,
+			mapping = aes(x = area, fill = state, color = state))
+p + geom_density(alpha = .3)
+
+p <- ggplot(data = subset(midwest, state%in% oh_wi),
+			mapping = aes(x = area, fill = state, color = state))
+p + geom_density(alpha = .3, mapping = aes(y=..scaled..))
+```
+
+## Avoiding transformations
+What if you want bars, but you don't want `ggplot` to do any tabulating, like if you want to feed it a table already? Example: the `titanic` survival table. Here we use the idiom `stat = "identity"` to tell `ggplot` not to transform our counts!
+
+```{r}
+p <- ggplot(data = titanic, mapping =aes(x = fate, y = percent, fill = sex))
+p + geom_bar(position = "dodge", stat = "identity") + 
+	theme(legend.position = "top")
+```
+
+
+```{r}
+p <- ggplot(data = oecd_sum,
+			mapping = aes(x = year, y = diff, fill = hi_lo))
+p + geom_col() +
+	guides(fill = FALSE) + # throw out color legend
+	labs(x = NULL, y = "Difference in years",
+		 title = "US life expectancy gap",
+		 subtitle = "Difference between US and OECD average life expectancies, 1960 - 2015",
+		 caption = "Data: OECD. After a chart by Christopher Ingraham,
+		 Washington Post, December 27th 2017")
+```
