@@ -8,8 +8,9 @@ output: html_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+These are the actual class notes from the session. The other docs (VizNotes) were my preparation, less useful for you, apologies for the clutter. 
 
-get packages loaded
+Start by getting packages loaded:
 ```{r, echo = FALSE, message = FALSE}
 library(tidyverse)
 library(gapminder)
