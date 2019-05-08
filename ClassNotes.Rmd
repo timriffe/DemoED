@@ -1,0 +1,145 @@
+---
+title: "Demographic Exploration and Discovery"
+author: "Tim Riffe"
+date: "May 8, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+get packages loaded
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(gapminder)
+library(ggplot2)
+library(socviz)
+library(here)
+```
+
+We're starting here: [https://socviz.co/makeplot.html#aesthetics-can-be-mapped-per-geom](https://socviz.co/makeplot.html#aesthetics-can-be-mapped-per-geom)
+
+Here is an example of all geoms *sharing* a mapping because it was given in `ggplot()`. Ergo, everything is grouped in the same way.
+```{r}
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, 
+						  y = lifeExp,
+						  color = continent, fill = continent))
+p + geom_point() +
+	geom_smooth(method = "loess") + 
+	scale_x_log10()
+
+```
+
+Wow, that plot is kinda fancy, but it's oversaturated and hard to pick out meaningful patterns, #amiright? How can we have the same points but with just one smoother? Give the mapping in the geom!
+
+##
+
+```{r}
+p <- ggplot(data = gapminder, gapminder,
+			mapping = aes(x= gdpPercap, y = lifeExp))
+# notice the color mapping moved down to geom_point()
+p + geom_point(mapping = aes(color = continent)) +
+# no color mapping for geom_smooth() implies just once over all data
+	geom_smooth(method = "loess") + 
+	scale_x_log10()
+```
+
+Lesson: you can choose which `geom` elements abide by which mappings by specifying them inside the `geom` functions instead of giving them a global mapping in the `ggplot()` function.
+
+## saving
+
+Moral: save as a vector graphic: the platonic perfect form of a well-produced data visualization, infinitely zoomable and lossless.
+Vector options are `pdf`or `svg`. But usually better to stick with `pdf` (because it support transparency when saving from `R`).
+
+Don't save in raster formats, such as `JPEG` unless it's a photo in a natural setting- they don't work well in high contrast environments, especially if they contain straight lines of contrast. But there are other raster formats that are not so bad, like `png` or `tiff` because they don't lose information-- they save it faithfully to the level of resolution that you specify. If saving to `png`, 300 dpi is just fine, unless it's for publication or poster printing, in which case 600 dpi is better (as long as the printers actually print it that way!).
+
+So, let's save a plot to pdf first:
+
+```{r}
+# same plot from above, will just assign it to an object
+# to be explicit about saving it out
+p <- ggplot(data = gapminder, gapminder,
+			mapping = aes(x= gdpPercap, y = lifeExp))
+p <- p + geom_point(mapping = aes(color = continent)) +
+	geom_smooth(method = "loess") + 
+	scale_x_log10()
+
+# the working directory
+here()
+
+# you'll have to change this path-- it's always relative to the working
+# directory
+ggsave(filename = here("Lecture_08052019", "PrestonMeetsRosling.pdf"), 
+	   plot = p,
+	   height = 15, width = 15, units = "cm")
+
+# repeat for png
+ggsave(filename = here("Lecture_08052019", "PrestonMeetsRosling.png"), 
+	   plot = p,
+	   dpi = 300, # this argument gives resolution.
+	   height = 15, width = 15, units = "cm")
+```
+
+## real quick `facet_wrap()`
+
+Facetting is ggplot lingo for making plots by groups and arranging them on a grid, also known as small multiples, or some kinds of panel plots.
+
+This is from the second code chunk in section 4.2: [https://socviz.co/groupfacettx.html#facet-to-make-small-multiples](https://socviz.co/groupfacettx.html#facet-to-make-small-multiples)
+```{r}
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = year, 
+						  y = lifeExp))
+p + geom_line(aes(group = country)) + 
+	facet_wrap(~continent, ncol = 5)
+```
+
+## Cross-tab facetting
+To do more tricks with dimensionality and geoms it's better to work with some more high dimensional data, like The General Social Survey (GSS). 
+
+```{r}
+#glimpse(gss_sm)
+p <- ggplot(data = gss_sm,
+			mapping = aes(x = age, y = childs))
+p + geom_point(alpha = .2) +
+	geom_smooth() + 
+	facet_grid(sex~race)
+```
+Without the facet wrap this would be highly overlapped data (overplotting), but we can squeeze out group differences by doing the same thing for different *intersections* in the data. Operating on groups in this way is similar to interacting variables in a regression setting, or doing cross-tabulations in an aggregate setting. The same smoother specification gets fit to each subset of the data. The coefficients of the smoother don't matter, it just gives a feel for the average pattern over age, and the points give a sense of the spread in the data. What would be better a better way to display the information in the points here?
+
+## WAPO graphic
+Jumping to the end of the chapter- the WAPO graphic here:[https://socviz.co/groupfacettx.html#avoid-transformations-when-necessary](https://socviz.co/groupfacettx.html#avoid-transformations-when-necessary). This example showcases `geom_col()`, which is just like `geom_bar()` but with friendlier defaults for plotting aggregate magnitudes like these LE differences. Otherwise `geom_bar` would rescale the data in undesired ways. 
+
+Remember, when mapping, `color` is interpreted as the color of points, borders, and lines, whereas `fill` is interpreted as the color of *areas*. Here we map `hi_lo` to color, and it will be interpreted as categorical because the `hi_lo` variable in `oecd_sum` is character and gets coerced to factor.
+
+```{r, fig.width = 12}
+glimpse(oecd_sum)
+p <- ggplot(data = oecd_sum, mapping = aes(x = year,
+										   y = diff,
+										   fill = hi_lo))
+p + geom_col() + guides(fill = FALSE) +
+	labs(x = NULL, y = "Difference in years",
+		 title = "The US Life Expectancy Gap",
+		 subtitle = "Difference between US and OECD average life expectancies, 1960-2015",
+		 caption = "Christopher Ingraham, Washington Post, December 27th 2017.")
+```
+It's a coindicence that the colors have mnemonic appeal here: red for underperformance, blue when things look good for the *ego* country. What if you wanted to explicitly set colors? Then there are two ways to go:  give a vector of colors (here copied, pasted, and modified) using `+ scale_color_manual()`
+```{r, fig.width = 12}
+p <- ggplot(data = oecd_sum, mapping = aes(x = year,
+										   y = diff,
+										   fill = hi_lo))
+p + geom_col() + 
+	# colors manually set here-- you can use a color picker
+	scale_fill_manual(values=c("#E69F00", "#56B4E9")) +
+	guides(fill = FALSE) +
+	labs(x = NULL, y = "Difference in years",
+		 title = "The US Life Expectancy Gap",
+		 subtitle = "Difference between US and OECD average life expectancies, 1960-2015",
+		 caption = "Christopher Ingraham, Washington Post, December 27th 2017.")
+```
+or instead of doing it manually (OK here cuz it's just two colors) you can check out the functions called `scale_fill_...()`, where `...` might be something like `brewer` for a brewer palette, etc. I'll demonstrate this soon.
+
+
+This is as far as we got in session. We will cover the material skipped over, and chapter five in the next session. If 
+
