@@ -14,6 +14,7 @@ library(ggplot2)
 library(tidyverse)
 library(gapminder)
 library(socviz)
+library(here)
 ```
 ## starting where we left off
 (2019)[https://socviz.co/gettingstarted.html#make-your-first-figure]
@@ -54,6 +55,16 @@ getwd() # but easier to remember!
 here("Lecture_08052019","PrestonContinents.pdf")
 
 ggsave(here("Lecture_08052019","PrestonContinents.pdf"), plot = p)
+```
+
+### each country a line?
+```{r}
+p <- ggplot(data = gapminder, 
+			mapping = aes(x = gdpPercap, 
+						  y = lifeExp, 
+						  color = continent))
+p + geom_line(aes(group = country, alpha = .1)) +
+	scale_x_log10()
 ```
 
 ## chapter 4
