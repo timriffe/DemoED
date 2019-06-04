@@ -1,0 +1,183 @@
+---
+title: "Demographic Exploration and Discovery"
+author: "Tim Riffe"
+date: "May 22, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Start by getting packages loaded:
+```{r, echo = FALSE, message = FALSE}
+library(tidyverse)
+library(gapminder)
+library(ggplot2)
+library(socviz)
+library(here)
+```
+## Filling in Chapter 4:
+
+## new geoms
+
+Look here: [https://socviz.co/groupfacettx.html#statfunctions](https://socviz.co/groupfacettx.html#statfunctions)
+
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar()
+
+# first try proportional
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar(aes(y=..prop..))
+
+# second try proportional
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion))
+p + geom_bar(aes(y=..prop.., group = 1))
+```
+
+Looking at religion variable
+```{r}
+# first try:
+p <- ggplot(data = gss_sm, mapping = aes(x = religion, color = religion)) 
+p +	geom_bar()
+
+# second try: use fill instead of color for solid areas
+p <- ggplot(data = gss_sm, mapping = aes(x = religion, fill = religion))
+p + geom_bar() + guides(fill = FALSE)
+```
+
+Stacked bars: crude count of rows, not very informative.
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar() 
+```
+
+If you want to actually compare composition try scaling each bar to 1
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar(position="fill") 
+```
+A bit easier to compare heights, but for the middle areas still tough- when you can get away from it, side-by-side is best for comparing heights of subgroups (always with tradeoffs). Use `position="dodge"`, with `mapping = ..prop..`:
+```{r}
+p <- ggplot(data = gss_sm, mapping = aes(x = bigregion, fill = religion))
+p + geom_bar(position = "dodge", 
+			 mapping = aes(y = ..prop.., group = religion)) 
+```
+or we can separate regions with facetting, and then maybe colors aren't so important:
+```{r}
+p <- ggplot(data =gss_sm, mapping = aes(x = religion))
+p + geom_bar(position = "dodge", mapping = aes(y=..prop..,group = bigregion)) + facet_wrap(~bigregion, ncol = 2)
+```
+
+## Histograms and densities
+look here: [https://socviz.co/groupfacettx.html#histograms](https://socviz.co/groupfacettx.html#histograms)
+
+Now switching datasets to one that ships with `ggplot2` called `midwest`.
+```{r, echo = FALSE}
+glimpse(midwest)
+```
+
+Histograms are straightforward: bins of (usually) uniform width are calculated over a single continuous variable and displayed as discrete bars. A bar chart is the same idea but bars are (usually) drawn for categories. `ggplot` is doing some calulcations under the hood in order to produce this: i.e. it's another example of an indirect path from data to a plot, where intermediate calculations are hidden from view. But it's a common use case, so good to have.
+
+```{r}
+p <- ggplot(data = midwest, mapping = aes(x = area))
+p + geom_histogram()
+# or an approx number of bins
+p + geom_histogram(bins = 10)
+# or a specific width
+p + geom_histogram(binwidth = .001)
+```
+
+Comparisons (here stacked, not overlapped!). This split is acheived simply by mapping state to fill color. Removing that line would draw just a single filled area. Notice how subsetting is done in-situ, instead of assigning the subset to an indermediate object. That is a more verbose call, but keeps the workspace tidier.
+```{r}
+oh_wi <- c("OH","WI")
+p <- ggplot(data = subset(midwest, state %in% oh_wi),
+			mapping = aes(x = percollege, fill = state))
+p + geom_histogram(alpha = 0.4, bins = 20)
+```
+
+Or a kernel (smoothed) density of a continuous variable- same idea as a histogram, but it makes sense (IMO) when the data are large and actually have a semi-smooth pattern.
+```{r}
+p <- ggplot(data = midwest, mapping = aes(x = area))
+p + geom_density()
+```
+
+And again, by groups, and with semitransparent fills:
+```{r}
+p <- ggplot(data = midwest,
+			mapping = aes(x = area, fill = state, color = state))
+p + geom_density(alpha = .3)
+
+p <- ggplot(data = subset(midwest, state%in% oh_wi),
+			mapping = aes(x = area, fill = state, color = state))
+p + geom_density(alpha = .3, mapping = aes(y=..scaled..))
+```
+
+This ends the chapter 4 fill-in!
+
+# Chapter 5
+
+In the previous chapter several `ggplot` shorthands were done, all of which imply some intermediate calculations from view. They are instead implied by using specific `geoms` that take care of some calculations for you. A potential problem might be that it's not clear to the reader how the calculations were done. For example, with the GSS data we made dodged bar charts by religion and region, and it might not be obvious whether region or religion is supposed to sum to one. This sort of thing is why it's often good to externalize all such data prep and make it explicit and legible to the reader of your code (usually **yourself** a week or more after having written it!!). This we do using several utility functions (whose names are verbs) in the tidyverse. Series of operations end up reading like a sentence. Here's an example:
+
+To make `rel_by_religion` first take the `gss_sm` dataset, feed it to `group_by()` which sets data groupings (subsets) by bigregion and by religion within region, then feeds that output to `summarize`, where we make a new variable `N`, the count of individuals in each subset (`nrow()` in base R), then pass this modified object to `mutate` to calculate two new columns `freq` and `pct` (which is based on `freq`, created in the same call!!). Since that's an explicit call, we know that `pct` is the percent breakdown over religion within big regions. All this calculation was happening implicitly in previous calls to `geom_bar()`.
+```{r, message = FALSE}
+
+rel_by_region <- gss_sm %>%
+	group_by(bigregion, religion) %>%
+	summarize(N = n()) %>%
+	mutate(freq = N / sum(N),
+		   pct = round((freq * 100), 0))
+
+p <- ggplot(data = rel_by_region, aes(x = bigregion, y = pct, fill = religion))
+p + geom_col(position = "dodge") 
+
+p <- ggplot(rel_by_region, aes(x = religion, y = pct, fill = religion))
+p + geom_col(position = "dodge2") +
+	coord_flip() + 
+	facet_grid(~bigregion)
+```
+
+Here's another easy use of tidy data functions. `select()` picks out the first 6 columns here, then passes this to a help function `sample_n()` which will pick out 10 random rows to show us. A quick look at the `organdata` dataset.
+
+```{r}
+organdata %>% select(1:6) %>% sample_n(size = 10)
+
+# ugly lines, but clear trends
+p <- ggplot(data = organdata, mapping = aes(x = year, y = donors))
+p + geom_line(aes(group = country)) + facet_wrap(~country)
+```
+In the above trend panel plot, each individual trend is easy to identify and pick out, but they're not necessarily easy to compare. The next one throws out the trend and instead summarizes overall variation in donor rates in each country, sorting countries (good practice -- better than alphabetical always!) by median donor levels, and coloring the boxes by some standard categories of worldviews that dominate each country. That's weird to me because I'm not a sociologist, but whatever.
+
+```{r}
+# throw out trends and keep variation:
+p <- ggplot(data = organdata, 
+			mapping = aes(x = reorder(country, donors, FUN = median, na.rm = TRUE), y = donors, fill = world))
+p + geom_boxplot()+ coord_flip()
+```
+
+Another example of `dplyr` table pipeline, which reads "take the `organdata` dataset, then group it by the consent law variable, and by country within that, then take EACH numeric column (picked out using `is.numeric`) and get its mean and standard deviation within each of these subsets. `na.rm` tells us to ignore missing values. `ungroup` returns the dataset with these new variables to us with the group attribute removed (it might have unintended side effects if we left he group attribute on the new object).
+```{r}
+by_country <- organdata %>% 
+	group_by(consent_law, country) %>%
+	# nice trick
+	summarize_if(is.numeric, list(mean = mean, sd=sd), na.rm = TRUE) %>%
+	ungroup()
+```
+Then we take this new data object that was created in an explicit way and make a dot plot (awesome and underused), where countries are stacked ordered on the newly created variable `donor_mean`.
+```{r}
+p <- ggplot(data = by_country,
+			mapping = aes(
+				x = donors_mean, 
+				y = reorder(country, donors_mean),
+						  color = consent_law))
+p + geom_point(size = 3) 
+```
+
+
+```{r}
+p <- ggplot(data = organdata,
+			mapping = aes(x = reorder(country, donors, na.rm =TRUE),
+						  y = donors, color = world))
+p + geom_jitter(position = position_jitter(width = .15)) + coord_flip() 
+```

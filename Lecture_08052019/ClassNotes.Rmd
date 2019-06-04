@@ -142,5 +142,5 @@ p + geom_col() +
 or instead of doing it manually (OK here cuz it's just two colors) you can check out the functions called `scale_fill_...()`, where `...` might be something like `brewer` for a brewer palette, etc. I'll demonstrate this soon.
 
 
-This is as far as we got in session. We will cover the material skipped over, and chapter five in the next session. If 
+This is as far as we got in session. We will cover the material skipped over, and chapter five in the next session. 
 
