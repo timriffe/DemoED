@@ -1,0 +1,172 @@
+---
+title: "Class Preparation"
+author: "Tim Riffe"
+date: "June 5, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## You can safely ignore this file
+This is a script I just used for warm-up.
+
+## remake final figure from previous session
+```{r, message = FALSE}
+library(tidyverse)
+library(gapminder)
+library(ggplot2)
+library(socviz)
+library(here)
+```
+
+This was the object we were using:
+```{r}
+by_country <- organdata %>% 
+	group_by(consent_law, country) %>%
+	# nice trick
+	summarize_if(is.numeric, list(mean = mean, sd=sd), na.rm = TRUE) %>%
+	ungroup()
+```
+
+The penultimate plot we made was a dotplot, where countries are ordered by their mean donor rate and colored by consent law. Recall, all those mappings declared inside the `aes()` function!
+```{r}
+p <- ggplot(data = by_country,
+			mapping = aes(
+				x = donors_mean, 
+				y = reorder(country, donors_mean),
+						  color = consent_law))
+p + geom_point(size = 3) 
+```
+The choice to draw points is declared via the `geom`. Here's the same plot but showing all datapoints (trends not revealed). TO avoid overlap, we jitter.
+
+```{r}
+p <- ggplot(data = organdata,
+			mapping = aes(x = reorder(country, donors, na.rm =TRUE),
+						  y = donors, color = world))
+p + geom_jitter(position = position_jitter(width = .15)) + coord_flip() 
+```
+
+Rather than color, one could use facetting to separate groups, and this might do a better job of revealing differences in patterns between groups.
+
+```{r}
+p <- ggplot(data = by_country,
+			mapping = aes(x = donors_mean,
+						  y = reorder(country, donors_mean)))
+p + geom_point(size = 3) +
+	facet_wrap(~consent_law, scales = "free_y", ncol = 1) +
+	labs(x = "Donor Procurement Rate", y = "")
+```
+
+Here we've reverted back to points for means, but we can also indicate the range with a line segments, a sort of alternative to the boxplots we drew previously. The `geom` for that is `geom_pointrange`, where we explicit about how to draw the upper and lower bounds to the segments. Here +/- one sd.
+
+```{r}
+p <- ggplot(data = by_country, mapping = aes(x = reorder(country, donors_mean), y = donors_mean))
+p + geom_pointrange(mapping = aes(ymin = donors_mean - donors_sd, ymax = donors_mean + donors_sd)) +
+	labs(y = "Donor Procurement Rate", x = "") + coord_flip()
+```
+
+How about a labelled scatterplot, in this case showing the relationship between road coverage and donors: better transport (or more accidents?) = more donors? The point here is to use `geom_text()` for adding text to the plot.
+```{r}
+p <- ggplot(data = by_country, mapping = aes(x = roads_mean, y = donors_mean))
+p + geom_point() + geom_text(mapping = aes(label = country))
+```
+
+uh oh, a bunch of labels are overlapping both with each other and with the data points. We can solve the second one using `hjust = 1` to right justify it:
+```{r}
+p <- ggplot(data = by_country, mapping = aes(x = roads_mean, y = donors_mean))
+p + geom_point() + geom_text(mapping = aes(label = country), hjust = 1)
+```
+But there's still overlapping. There's a package just for solving this problem in `ggplot`: `ggrepel`.
+
+```{r}
+library(ggrepel)
+p <- ggplot(data = by_country, mapping = aes(x = roads_mean, y = donors_mean))
+p + geom_point() + geom_text_repel(mapping = aes(label = country), hjust = 1)
+```
+See, it even draws pointers where necessary. Neat trick, saves you an hour or more of fiddling. Optional- recreate the elections graphic from the book. To label just certain points specify the `data` argument inside `geom_text()` or `geom_text_repel()` where the dataset is cut down to just the needed points using `subset()` or similar.
+
+You can add ad hoc text to plots using the `annotate()` geom. Do this liberally!
+
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x = roads, y = donors))
+p + geom_point() +
+	annotate(geom = "text", 
+			 x = 120, y = 33, # explicit location
+			 label = "A surprisingly high \nrecovery rates.", hjust = 1)
+```
+Or you might prefer to demarcate a region:
+
+```{r}
+p <- ggplot(data = organdata, mapping = aes(x = roads, y = donors))
+p + geom_point() +
+	annotate(geom = "rect",
+			 xmin = 125, xmax = 155,
+			 ymin = 30, ymax = 35, 
+			 fill = "red", alpha = 0.2) +
+	annotate(geom = "text", 
+			 x = 157, y = 33, # explicit location
+			 label = "A surprisingly high \nrecovery rate.", hjust = 0)
+```
+
+Here is an involved example of `ggrepel` and annotation to make a finely curated scatterplot of US presidencies.
+
+```{r, fig.width = 10, fig.height=10}
+elections_historic %>% select(2:7)
+
+p_title    <- "Presidential Elections: Popular & Electoral College Margins"
+p_subtitle <- "1824-2016"
+p_caption  <- "Data for 2016 are provisional"
+x_label    <- "Winner's share of Popular Vote"
+y_label    <- "Winner's share of Electoral College Votes"
+
+p <- ggplot(data = elections_historic, 
+			mapping = aes(x = popular_pct,
+						  y = ec_pct,
+						  label = winner_label))
+p_out <- p + geom_hline(yintercept = 0.5, size = 1.4, color = gray(.8)) +
+	geom_vline(xintercept = 0.5, size = 1.4, color = gray(.8)) + 
+	geom_point() +
+	geom_text_repel() + 
+	scale_x_continuous(labels = scales::percent) + 
+	scale_y_continuous(labels = scales::percent) + 
+	labs(x = x_label, 
+		 y = y_label, 
+		 title = p_title, 
+		 subtitle = p_subtitle,
+		 caption = p_caption)
+p_out
+# ggsave("Elections.pdf", plot = p_out, height = 10, width = 10)
+# getwd()
+```
+
+# Chapter 6
+
+```{r}
+p <- ggplot(data = gapminder,
+			mapping = aes(x = log(gdpPercap),
+						  y = lifeExp))
+
+p + geom_point(alpha = .1) + 
+	geom_smooth(color = "tomato", fill = "tomato", method = MASS::rlm)+ 
+	geom_smooth(color = "steelblue", fill = "steelblue", method = lm)
+
+p + geom_point(alpha = .1) + 
+	geom_smooth(color = "tomato", fill = "tomato", method = "lm", size = 1.2, 
+				formula = y ~ splines::bs(x,3))
+
+p + geom_point(alpha = .1) + 
+	geom_quantile(color = "tomato", size = 1.2, method = "rqss",
+				  lambda = 1, quantiles = c(.2,.5,.85))
+```
+
+
+
+
+
+
+
+
+
+
