@@ -1,0 +1,139 @@
+---
+title: "Class Notes"
+author: "Tim Riffe"
+date: "June 19, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Get packages loaded
+```{r}
+library(socviz)
+library(gapminder)
+library(tidyverse)
+library(broom)
+```
+## List columns and nesting
+We start off here: [https://socviz.co/modeling.html#grouped-analysis-and-list-columns](https://socviz.co/modeling.html#grouped-analysis-and-list-columns)
+
+The objectives are to explain a column type that can hold complex data by using the `map` and `nest` functions. Since statistical model output is a complex list, we will use this column to store that kind of output, and we will send this to `ggplot` to make a nice plot of how the within-continent Preston relationship has changed over time.
+
+```{r}
+
+# this is a helper function.
+fit_ols <- function(df){
+	lm(lifeExp ~ log(gdpPercap), data = df)
+}
+
+out_le <- gapminder %>%
+	group_by(continent, year) %>%
+	nest() %>%
+    mutate(model = map(data, fit_ols))
+
+out_le
+```
+
+OK, so now we have a column called data that has the model output in each cell. But we can turn this into something useful and plottable!
+Try again, using the tidy function
+```{r}
+out_tidy <- gapminder %>%
+	group_by(continent, year) %>%
+	nest() %>%
+	mutate(model = map(data, fit_ols),
+		   tidied = map(model, tidy)) %>%
+	unnest(tidied, .drop = TRUE) %>%
+	filter(term %nin% "(Intercept)" &
+		   	continent %nin% "Oceania")
+sample_n(out_tidy,5)
+# Note %nin% is similar to !%in%
+# take a look!
+out_tidy %>% sample_n(5)
+```
+
+Great, now let's see how the slope has changed over time:
+```{r}
+p <- ggplot(data = out_tidy,
+			mapping = aes(x = year,
+						  y = estimate,
+						  ymin = estimate - 2 * std.error,
+						  ymax = estimate + 2 * std.error,
+						  group = continent, color = continent))
+p + geom_pointrange(position = position_dodge(width = 1.5)) + 
+	scale_x_continuous(breaks = unique(gapminder$year))
+
+```
+
+Timeout for functions!
+
+Toy example, arithmetic
+```{r}
+a <- function(x,y){
+	b <- x+y * x^2 - y^3
+	return(b - y + x)
+}
+
+a(x = runif(10), y = runif(10))
+```
+
+```{r}
+
+mx2lx <- function(mx, radix){
+	n <- length(mx)
+	radix * c(1,exp(-cumsum(mx)))[1:n]
+}
+
+lx2dx <- function(lx){
+	-diff(c(lx,0))
+}
+
+my_lt <- function(mx, radix){
+	mx <- tibble(mx)
+	lt <- mx %>% mutate(mx = mx,
+				  lx = mx2lx(mx, radix = radix),
+				  dx = lx2dx(lx))
+	lt
+}
+
+```
+
+# ggridges
+Now we skip a couple chapters and jump to a ridge plot, because we'll probably want to make one on Thursday using demographic data.
+
+```{r, fig.width = 5, fig.height = 10}
+library(ggridges)
+p <- ggplot(gss_lon,
+			mapping = aes(x = age, 
+						 y = factor(year, 
+						 		   levels = rev(unique(year)), 
+						 		   ordered = TRUE)))
+
+p + geom_density_ridges(alpha = 0.6, fill = "lightblue", scale = 1.5) +
+	scale_x_continuous(breaks = c(25,50,75)) + 
+	scale_y_discrete(expand = c(0.01,0)) + 
+	labs(x = "Age", y = NULL, title = "Age Distribution of \nGSS Respondents") + 
+	theme_ridges() + 
+	theme(title = element_text(size = 16, face = "bold"))
+```
+
+# Exercise for Thursday:
+
+This is a challenge. Are you up to it?
+
+Get HFC ASFR data from here:
+[https://www.fertilitydata.org/cgi-bin/data.php](https://www.fertilitydata.org/cgi-bin/data.php)
+
+Click on the one called *All HFC data (6.8Mb)* to get the big zip file.
+
+Then follow these steps: 
+
+1. move it to the folder for today's session
+2. read it into `R` somehow.
+3. examine the dataset using `sample_n()` to get a feel for it.
+4. within each subset (there arte more grouping variables than just country and year) calculate the total fertility rate (TFR) and the (ASFR-weighted) mean age at childbearing (MAB).
+5. now the goal is to draw a ridge plot of ASFR, where each ridge is a discrete bin of TFR in uniform intervals (maybe 8 - 15 different steps or so). Within each ridge there will be two distributions: The ASFR curve with the highest MAB and the one with the lowest MAB.
+6. What is the message that this plot delivers?
+
+
