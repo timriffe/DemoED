@@ -1,0 +1,167 @@
+---
+title: 'Freestyle #1'
+author: "Tim Riffe"
+date: "June 6, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Freestyle demography
+
+It's important to mess around with code and data in an unstructured way. That is how we generate mistakes, fix them, and cause learning to happen. Let's internalize some of the things we've seen in class, but on a fresh dataset that I've never seen, using methods I'm not entirely familiar with, etc. The goal will be to produce some visualizations that are geared toward better communication. Fancy if they need to be, simple where possible. 
+
+Let's start by bringing in Prof. Rau's code into a markdown file, annotating it, but not spending any time on theory. This was loosely narrated. You've seen it before. Now let's do something with that final smoking by sex model.
+
+```{r}
+library(ggplot2)
+library(tidyverse)
+library(survival)
+```
+
+
+```{r}
+load("SurvivalDataLarge.zip") # loading the data set. Might take a while...
+
+
+# 1) select rows using filter()
+datasmoking <- NHIS %>% 
+	filter(MORTELIG == 1 & BIRTHYR < 9000 & SMOKEV > 0) %>%
+# 2) column coding and creation:
+	mutate(  # column coding and creation:
+           ENTRY = AGE,
+		   STATUS = ifelse(MORTSTAT == 2, 0, 1),
+		   EXITYEAR = ifelse(STATUS == 0,2015,MORTDODY),
+		   EXITQUARTER = ifelse(MORTDODQ == 9, 4, MORTDODQ),
+		   approxexitmonth = EXITQUARTER * 3 - 1,
+		   EXITAGE = ifelse(approxexitmonth > BIRTHMO,
+				  			EXITYEAR - BIRTHYR,
+				  			ifelse(approxexitmonth < BIRTHMO,
+				  				 EXITYEAR - BIRTHYR - 1,
+				  				 EXITYEAR - BIRTHYR - sample(c(0, 1), size = 1))),
+		   EXITAGE2 = ifelse(EXITAGE == ENTRY, EXITAGE + 0.5, EXITAGE  ),
+		   geschlecht = as.factor(SEX),
+		   geschlecht = relevel(geschlecht, ref = 2),
+		   smoker = ifelse(SMOKEV == 1,"Neversmoker",
+		   				ifelse(SMOKEV == 2, "Smoked100", "ResidualCategory")),
+		   smoker = as.factor(smoker),
+		   smoker = relevel(smoker, ref="Neversmoker")
+				  ) %>%
+# filter again using newly made column
+	filter(EXITAGE >= ENTRY)
+
+dim(NHIS);dim(datasmoking)
+
+
+
+# Note, Surv doesn't have a data argument: it wants
+# its inputs as vectors...
+s.obj.smoke <- Surv(time = datasmoking$ENTRY, 
+					time2 = datasmoking$EXITAGE2, 
+					event = datasmoking$STATUS)
+
+# a first model, survival by smoking status
+coxsmoke    <- coxph(s.obj.smoke ~ smoker, data = datasmoking)
+
+# now controlling for sex
+coxsmokesex <- coxph(s.obj.smoke ~ smoker + geschlecht, 
+					 data = datasmoking,
+					 model = TRUE)
+
+# newdata
+unique(datasmoking$smoker)
+data_pred <- expand.grid(time = 50:80,
+						 event = 0,
+						 geschlecht = unique(datasmoking$geschlecht),
+			             smoker = unique(datasmoking$smoker)) %>% 
+	         mutate(time2 = time + 1) 
+
+# data_pred$risk <- predict(coxsmokesex, 
+# 			   newdata = data_pred,
+# 			   type = "risk")
+ length(predict(coxsmokesex, 
+			   newdata = data_pred,
+			   type = "expected"))
+library(broom)
+ 
+ # this seems promising. but what is row variable of cumhaz?
+tst <- survfit(coxsmokesex, newdata = data_pred) 
+str(tst)
+matplot(tst$time,exp(-tst$cumhaz),type='l')
+
+dim(data_pred)
+base <- survfit(coxsmokesex) %>% 
+	tidy %>%
+	filter(time %in% data_pred$time) %>%
+	full_join(data_pred) %>%
+	select(time, time2, smoker, geschlecht, risk, estimate)
+head(base)
+
+```
+
+The survival package is one of the oldest most robust packages in the `R` universe. That means that it has base plotting functions of its own. Check it out.
+```{r}
+coxsmokesex.fit <- survfit(coxsmokesex)
+summary(coxsmokesex)
+library(broom)
+tidy_cox <- tidy(coxsmokesex.fit)
+
+p <- ggplot(data = tidy_cox, mapping = aes(x = time, y = estimate,ymin = conf.low, ymax = conf.high))
+p + geom_line() + geom_ribbon()
+
+unique(datasmoking$smoker)
+
+
+
+
+```
+
+Hang on, let's do this for a properly working example. Then I'll go back and fix the one above, I swear.
+```{r}
+glimpse(lung)
+out_cph <- coxph(Surv(time, status) ~ age + sex, data = lung, method="breslow", model=TRUE)
+out_fit <- survfit(out_cph)
+out_tidy <- tidy(out_fit)
+
+
+p <- ggplot(out_tidy, mapping = aes(x = time, 
+									y = estimate, 
+									ymin = conf.low, 
+									ymax = conf.high))
+p + geom_line() + 
+	geom_ribbon(alpha = .2)
+
+newdata <- expand.grid(time = seq(0,2.5,by = .25) * 365,
+					   sex = c(1,2),
+					   age = c(50,60,70),
+					   status = 0)
+
+newdata$estimate <- predict(out_cph, newdata = newdata, type = "expected")
+
+p <- ggplot(newdata, mapping = aes(x = time / 365,
+							  y = estimate, color = as.factor(age)))
+p + geom_line() + facet_wrap(~sex)
+```
+
+Now let's do some dplyr magic to get all six expectancies, using the lifetable approach.
+
+```{r}
+newdata <- newdata %>% group_by(sex, age) %>%
+	mutate(x = age + time / 365,
+		   haz = c(diff(estimate),5),
+		   ax = .125,
+		   qx = haz / (1 + (1-ax)*haz),
+		   lx = cumprod(1-qx),
+		   dx = c(-diff(lx),lx[length(lx)]),
+		   Lx = lx - (1-ax)*dx,
+		   Tx = rev(cumsum(rev(Lx))),
+		   ex = Tx / lx
+	) %>% ungroup()
+
+ggplot(subset(newdata, time == 0), mapping = aes(y = ex, x = as.character(age))) +
+	geom_col() + facet_wrap(~sex)
+
+
+```
