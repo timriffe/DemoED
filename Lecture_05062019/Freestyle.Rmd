@@ -15,16 +15,17 @@ It's important to mess around with code and data in an unstructured way. That is
 
 Let's start by bringing in Prof. Rau's code into a markdown file, annotating it, but not spending any time on theory. This was loosely narrated. You've seen it before. Now let's do something with that final smoking by sex model.
 
+Load packages
 ```{r}
 library(ggplot2)
 library(tidyverse)
 library(survival)
+library(broom)
 ```
 
-
+This is the original data prep, re-written in tidy code, targetting only the `datasmoking` object. A single *verbalization* of the data processing steps. loading in the data takes the same amount of time, but I suppose the rest executes a bit faster, not that we care much about that. No intermediate data objects are created.
 ```{r}
 load("SurvivalDataLarge.zip") # loading the data set. Might take a while...
-
 
 # 1) select rows using filter()
 datasmoking <- NHIS %>% 
@@ -52,9 +53,8 @@ datasmoking <- NHIS %>%
 # filter again using newly made column
 	filter(EXITAGE >= ENTRY)
 
-dim(NHIS);dim(datasmoking)
-
-
+# get rid of the big piece of data...
+rm(NHIS);gc()
 
 # Note, Surv doesn't have a data argument: it wants
 # its inputs as vectors...
@@ -62,62 +62,50 @@ s.obj.smoke <- Surv(time = datasmoking$ENTRY,
 					time2 = datasmoking$EXITAGE2, 
 					event = datasmoking$STATUS)
 
-# a first model, survival by smoking status
-coxsmoke    <- coxph(s.obj.smoke ~ smoker, data = datasmoking)
-
 # now controlling for sex
 coxsmokesex <- coxph(s.obj.smoke ~ smoker + geschlecht, 
 					 data = datasmoking,
 					 model = TRUE)
 
-# newdata
-unique(datasmoking$smoker)
-data_pred <- expand.grid(time = 50:80,
-						 event = 0,
-						 geschlecht = unique(datasmoking$geschlecht),
-			             smoker = unique(datasmoking$smoker)) %>% 
-	         mutate(time2 = time + 1) 
+# newdata to predict for, needs to have all the original columns
+# given to Surv() and to coxph, apparently
+newdata <- expand.grid(time = 19,
+			time2 = 20,
+			event = 1,
+			geschlecht = unique(datasmoking$geschlecht),
+			smoker = unique(datasmoking$smoker)) 
+# survfit predicts for each strata, but it makes an awful complicated list,
+# so we first tidy it, but there is some extra book keeping to do. Ugly ugly code
+# and not worth internalizing all this, especially the quoted text pieces, which
+# are ugly and ad hoc. This isn't exactly selling survfit + broom
+coxstrata <- survfit(coxsmokesex, newdata = newdata) %>%
+	     tidy %>% 
+	gather(key = "lx", value = "value", -time, -n.risk,-n.event,-n.censor) %>% 
+	mutate(strata = as.integer(str_extract(lx, "[[0-9]]")),
+		   lx = str_extract(lx, "[[a-z]]+.[[a-z]]*"),
+		   id = 1:n()) %>%
+	select(time, lx, strata, value) %>%
+	spread(lx, value) %>%
+	mutate(sex = ifelse(strata %% 2 == 0,"male","f"),
+		   smoker = ifelse(strata %in% c(1,2), "Neversmoker",
+		   				ifelse(strata %in% c(3,4), "Smoked100","Residual")))
 
-# data_pred$risk <- predict(coxsmokesex, 
-# 			   newdata = data_pred,
-# 			   type = "risk")
- length(predict(coxsmokesex, 
-			   newdata = data_pred,
-			   type = "expected"))
-library(broom)
- 
- # this seems promising. but what is row variable of cumhaz?
-tst <- survfit(coxsmokesex, newdata = data_pred) 
-str(tst)
-matplot(tst$time,exp(-tst$cumhaz),type='l')
+```
+Note: `survfit` produces knarly list output, but one of the elements is `haz`, which is a matrix where rows are `time` and columns are `strata`, but they are unfortunately unlabelled. There are other ways to just turn that object into something useful right away, but these exit the tidyverse for the most part. Can demonstrate if you like.
 
-dim(data_pred)
-base <- survfit(coxsmokesex) %>% 
-	tidy %>%
-	filter(time %in% data_pred$time) %>%
-	full_join(data_pred) %>%
-	select(time, time2, smoker, geschlecht, risk, estimate)
-head(base)
+Now we have 6 survival curves, one for each sex and smoking status. Let's convert each to `e(18)`. To do so, note that the curves start at 18.5, so we can assume age 18 has a value of 1.
+```{r}
+e18 <- coxstrata  %>%  group_by(sex,smoker) %>% 
+	summarize(ex = (sum(estimate.) + 1) / 2)
 
+ggplot(e18, mapping = aes(x = sex, y = ex, fill = smoker)) +
+	geom_col(position = "dodge") 
 ```
 
 The survival package is one of the oldest most robust packages in the `R` universe. That means that it has base plotting functions of its own. Check it out.
-```{r}
-coxsmokesex.fit <- survfit(coxsmokesex)
-summary(coxsmokesex)
-library(broom)
-tidy_cox <- tidy(coxsmokesex.fit)
-
-p <- ggplot(data = tidy_cox, mapping = aes(x = time, y = estimate,ymin = conf.low, ymax = conf.high))
-p + geom_line() + geom_ribbon()
-
-unique(datasmoking$smoker)
 
 
-
-
-```
-
+# initial re-do using the `lung` dataset:
 Hang on, let's do this for a properly working example. Then I'll go back and fix the one above, I swear.
 ```{r}
 glimpse(lung)
