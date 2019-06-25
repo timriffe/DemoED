@@ -132,7 +132,8 @@ Then follow these steps:
 1. move it to the folder for today's session
 2. read it into `R` somehow.
 3. examine the dataset using `sample_n()` to get a feel for it.
-4. within each subset (there arte more grouping variables than just country and year) calculate the total fertility rate (TFR) and the (ASFR-weighted) mean age at childbearing (MAB).
+4. within each subset (there art more grouping variables than just country and year) calculate the total fertility rate (TFR) and the (ASFR-weighted) mean age at childbearing (MAB).
+
 5. now the goal is to draw a ridge plot of ASFR, where each ridge is a discrete bin of TFR in uniform intervals (maybe 8 - 15 different steps or so). Within each ridge there will be two distributions: The ASFR curve with the highest MAB and the one with the lowest MAB.
 6. What is the message that this plot delivers?
 

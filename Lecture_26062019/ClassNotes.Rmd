@@ -1,0 +1,53 @@
+---
+title: "Demographic Exploration and Discovery: Color in R"
+author: "Tim Riffe"
+date: "June 26, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Color
+
+# Basics on specification
+
+Let's talk about sequential, diverging, and qualitative colors
+```{r}
+library(colorspace)
+hcl_palettes(plot = TRUE)
+```
+You can use these palettes like so to produce a vector of colors:
+```{r}
+sequential_hcl(10,"BurgYl")
+qualitative_hcl(5,"Dynamic")
+diverging_hcl(20, "Lisbon")
+
+se <- sequential_hcl(10,"BurgYl")
+demoplot(se,"map")
+demoplot(se,"heatmap")
+demoplot(se,"bar")
+demoplot(se,"line")
+demoplot(se,"scatter")
+```
+
+Or in the `ggplot2` framework we've been using:
+```{r}
+library("ggplot2")
+ggplot(iris, aes(x = Sepal.Length, fill = Species)) + geom_density(alpha = 0.6) +
+  scale_fill_discrete_qualitative(palette = "Dark 3")
+
+dsamp <- diamonds[1 + 1:1000 * 50, ]
+ggplot(dsamp, aes(carat, price, color = cut)) + geom_point() +
+  scale_color_discrete_sequential(palette = "Purples 3", nmax = 6, order = 2:6)
+```
+You can compose the different `scale_color_` functions using the same pattern.
+
+# Discrete vs continuous color
+
+# Background vs foreground
+
+# Points / lines vs areas
+
+# geom_tile, geom_contour, geom_raster

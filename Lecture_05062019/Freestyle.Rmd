@@ -43,7 +43,7 @@ datasmoking <- NHIS %>%
 				  				 EXITYEAR - BIRTHYR - 1,
 				  				 EXITYEAR - BIRTHYR - sample(c(0, 1), size = 1))),
 		   EXITAGE2 = ifelse(EXITAGE == ENTRY, EXITAGE + 0.5, EXITAGE  ),
-		   geschlecht = as.factor(SEX),
+		   geschlecht = as.factor(SEX), # need sex as factor its strata
 		   geschlecht = relevel(geschlecht, ref = 2),
 		   smoker = ifelse(SMOKEV == 1,"Neversmoker",
 		   				ifelse(SMOKEV == 2, "Smoked100", "ResidualCategory")),
@@ -78,6 +78,7 @@ newdata <- expand.grid(time = 19,
 # so we first tidy it, but there is some extra book keeping to do. Ugly ugly code
 # and not worth internalizing all this, especially the quoted text pieces, which
 # are ugly and ad hoc. This isn't exactly selling survfit + broom
+
 coxstrata <- survfit(coxsmokesex, newdata = newdata) %>%
 	     tidy %>% 
 	gather(key = "lx", value = "value", -time, -n.risk,-n.event,-n.censor) %>% 
@@ -86,24 +87,36 @@ coxstrata <- survfit(coxsmokesex, newdata = newdata) %>%
 		   id = 1:n()) %>%
 	select(time, lx, strata, value) %>%
 	spread(lx, value) %>%
-	mutate(sex = ifelse(strata %% 2 == 0,"male","f"),
+	mutate(sex = ifelse(strata %% 2 == 0,"male","female"),
 		   smoker = ifelse(strata %in% c(1,2), "Neversmoker",
 		   				ifelse(strata %in% c(3,4), "Smoked100","Residual")))
 
 ```
 Note: `survfit` produces knarly list output, but one of the elements is `haz`, which is a matrix where rows are `time` and columns are `strata`, but they are unfortunately unlabelled. There are other ways to just turn that object into something useful right away, but these exit the tidyverse for the most part. Can demonstrate if you like.
 
+
+
 Now we have 6 survival curves, one for each sex and smoking status. Let's convert each to `e(18)`. To do so, note that the curves start at 18.5, so we can assume age 18 has a value of 1.
 ```{r}
 e18 <- coxstrata  %>%  group_by(sex,smoker) %>% 
 	summarize(ex = (sum(estimate.) + 1) / 2)
-
+e18
 ggplot(e18, mapping = aes(x = sex, y = ex, fill = smoker)) +
 	geom_col(position = "dodge") 
 ```
 
 The survival package is one of the oldest most robust packages in the `R` universe. That means that it has base plotting functions of its own. Check it out.
+```{r}
+sf <- survfit(coxsmokesex, newdata = newdata)
+lx <- sf$surv
+rownames(lx) <- sf$time
+colnames(lx) <- paste(newdata$smoker, newdata$geschlecht, sep = "_")
 
+library(reshape2)
+lx <- melt(lx, value.name = "lx", varnames = c("Age", "Strata")) %>% 
+      separate(lx, Strata, into = c("smoker","sex"))
+
+```
 
 # initial re-do using the `lung` dataset:
 Hang on, let's do this for a properly working example. Then I'll go back and fix the one above, I swear.
