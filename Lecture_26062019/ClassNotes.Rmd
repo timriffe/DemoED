@@ -13,23 +13,37 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Basics on specification
 
+You can always use named colors in once-off applications, but it's hard to remember many names. In general, `R` ends up specifying colors in hex format, following the pattern `"#RRGGBBAA"`, where `#` starts the string, `RR` is the red channel, `GG` is the green channel, `BB` is the blue channel, and `AA` is the alpha (transparency) channel. `00` is the lowest value, and `FF` is the highest, and `80` is 50%. There's no point trying to figure out more than that unless you're really into hex. You just need to know that this is the *transfer* system that `R` uses. 
+
 ```{r}
 # named colors
 colors()
 c("#78b98f", "#e639b1", "#88dc40", "#5e2a96")
 ```
 
+In class we looked at an example of importing colors from an ad hoc online tool to `R`. 
+That was colorgorical: [http://vrl.cs.brown.edu/color](http://vrl.cs.brown.edu/color) 
+
+There are many many more, too many. Here's a fab blog post on color choices from Lisa Charlotte Rost: [https://blog.datawrapper.de/colorguide/](https://blog.datawrapper.de/colorguide/) and I highly encourage you to dig deeper.
+
+However, some basic tools in `R` can pretty much give you everything you need to do a good job.
+
+# Ramps and palettes
+
 Let's talk about sequential, diverging, and qualitative colors
 ```{r}
 library(colorspace)
 hcl_palettes(plot = TRUE)
 ```
-You can use these palettes like so to produce a vector of colors:
+You can use these palettes like so (using *ramp* functions) to produce a vector of colors:
 ```{r}
 sequential_hcl(100,"BurgYl")
 qualitative_hcl(5,"Dynamic")
 diverging_hcl(20, "Lisbon")
+```
 
+If you just want to do a test run to see how the colors *perform* in different standard plot types, feed your color vector to `demoplot()`
+```{r}
 se <- sequential_hcl(10,"BurgYl")
 demoplot(se,"map")
 demoplot(se,"heatmap")
@@ -49,25 +63,37 @@ dsamp <- diamonds[1 + 1:1000 * 50, ]
 ggplot(dsamp, aes(carat, price, color = cut)) + geom_point() +
   scale_color_discrete_sequential(palette = "Purples 3", nmax = 6, order = 2:6)
 ```
-You can compose the different `scale_color_` functions using the same pattern.
+You can compose the different `scale_color_` functions using the same pattern. Remember to compose these functions you build them using a tree diagram following this pattern: 
 
-## Discrete vs continuous color
-Only matters (probably) for Lexis surfaces and maps in general. Continuous colors are interpolated through your data as-is, where the min and max are mapped to the min and max of the given palette, and the color path goes through the control points that make up the given palette. If your surface is smooth, you'll see that, but it can be very hard to pick out trends in a smooth surface. Discrete colors reveal trends, but these may depend on the actual value intervals used to bin colors. 
+1. `scale_`
+2. `color_` or `fill_`
+3. `discrete_` or `continuous_`
+4. `qualitative()`, `sequential()`, or `divergent()`
+
+For example, above we used `scale_color_discrete_sequential()`.
+
+And at a minimum you give `palette = "blabla"`, where you get the palette name from that lookup table we referred to earlier. This just *adds* into the `ggplot()` statement that you're building.
+
+# Discrete vs continuous color
+Only matters (probably) for Lexis surfaces, heatmaps, and maps in general. Continuous colors are interpolated through your data as-is, where the min and max are mapped to the min and max of the given palette, and the color path goes through the control points that make up the given palette. If your surface is smooth, you'll see that, but it can be very hard to pick out trends in a smooth surface. Discrete colors reveal trends, but these may depend on the actual value intervals used to bin colors. 
 
 Check out Jonas Schöley's HMD explorer to remember the effect that continuous versus discrete colors can have on a map: [https://jschoeley.shinyapps.io/hmdexp/](https://jschoeley.shinyapps.io/hmdexp/)
 
 ## Background vs foreground
+
+Control plot noise and focus your message by using the notion of plot foreground and background. The background is best if it gives perspective, a comparison group for whom the constituent parts are less important, but desaturated so as to be not distracting. Your main finding around which you want to build a message then goes in the foreground- brighter, bolder, more saturated. Here's an example using a bunch of life expectancies from HMD:
 ```{r}
+library(tidyverse)
 library(HMDHFDplus)
 countries <- getHMDcountries()
 HMDe0 <- list()
 for (i in countries){
 	  HMDe0[[i]] <- readHMDweb(CNTRY = i,
 		         item = "E0per", 
-	  		     username = us, 
-	  		     password = pw)
+	  		     username = us, # remember not to save charcacter
+	  		     password = pw) # strings of passwords in scripts!
 }
-library(tidyverse)
+
 HMDe0 <- bind_rows(HMDe0, .id = "Country")
 
 p <- ggplot(HMDe0, mapping = aes(x = Year, y = Male))
@@ -81,29 +107,32 @@ p + geom_line(aes(group = Country), alpha = .3, color = gray(.5)) +
 			 x = 1990,
 			 y = 60)
 ```
-## Points / lines vs areas
 
-## geom_tile, geom_contour, geom_raster
+# Lexis surfaces
+
+Here are three geoms that might be useful for building Lexis surfaces. Remember, a Lexis surface is just an age by year Cartesian grid filled with some value. Usually we look at (log) rates, but it could be anything.
 
 ```{r,fig.width=10,fig.height=5}
-library(HMDHFDplus)
-library(ggplot2)
-library(colorspace)
+# grab Swedish deaths
 DX <-readHMDweb(CNTRY = "SWE",
 				item = "Deaths_1x1",
 				username = us, 
 				password = pw)
 
-
+# Lexis structured data, but not on a Lexis surface:
 p <- ggplot(DX, mapping = aes(x = Year, y = Male, fill = Age)) 
 	p + geom_col() + 
 		scale_fill_continuous_sequential(palette = "BurgYl") 
 
+# using geom_tile() with contours
 p <- ggplot(DX, mapping = aes(x=Year, y=Age, fill = log(Male)))
 p + geom_tile() +
 	scale_fill_continuous_sequential(palette = "BurgYl") + 
 	geom_contour(mapping=aes(z=log(Male)), col = "black") + 
 	coord_fixed()
 
+# and again using an underlying raster.
 p + geom_raster() + coord_fixed()
 ```
+
+Adding in `coord_fixed` makes the age units equal to the year units in space, which gives you an aspect ratio of 1, which is good practice for Lexis plots of all kinds. Notice how the bar plot and the Lexis plot accentuate different aspects of the data. 
