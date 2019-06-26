@@ -9,9 +9,14 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## Color
+# Color
 
-# Basics on specification
+## Basics on specification
+
+hex,
+names,
+ramps,
+spaces
 
 Let's talk about sequential, diverging, and qualitative colors
 ```{r}
@@ -32,7 +37,7 @@ demoplot(se,"line")
 demoplot(se,"scatter")
 ```
 
-Or in the `ggplot2` framework we've been using:
+Or in the `ggplot2` framework:
 ```{r}
 library("ggplot2")
 ggplot(iris, aes(x = Sepal.Length, fill = Species)) + geom_density(alpha = 0.6) +
@@ -44,10 +49,33 @@ ggplot(dsamp, aes(carat, price, color = cut)) + geom_point() +
 ```
 You can compose the different `scale_color_` functions using the same pattern.
 
-# Discrete vs continuous color
+## Discrete vs continuous color
 
-# Background vs foreground
+## Background vs foreground
 
-# Points / lines vs areas
+## Points / lines vs areas
 
-# geom_tile, geom_contour, geom_raster
+## geom_tile, geom_contour, geom_raster
+
+```{r,fig.width=10,fig.height=5}
+library(HMDHFDplus)
+library(ggplot2)
+library(colorspace)
+DX <-readHMDweb(CNTRY = "SWE",
+				item = "Deaths_1x1",
+				username = us, 
+				password = pw)
+
+
+p <- ggplot(DX, mapping = aes(x = Year, y = Male, fill = Age)) 
+	p + geom_col() + 
+		scale_fill_continuous_sequential(palette = "BurgYl") 
+
+p <- ggplot(DX, mapping = aes(x=Year, y=Age, fill = log(Male)))
+p + geom_tile() +
+	scale_fill_continuous_sequential(palette = "BurgYl") + 
+	geom_contour(mapping=aes(z=log(Male)), col = "black") + 
+	coord_fixed()
+
+p + geom_raster() + coord_fixed()
+```
