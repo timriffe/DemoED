@@ -13,10 +13,11 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Basics on specification
 
-hex,
-names,
-ramps,
-spaces
+```{r}
+# named colors
+colors()
+c("#78b98f", "#e639b1", "#88dc40", "#5e2a96")
+```
 
 Let's talk about sequential, diverging, and qualitative colors
 ```{r}
@@ -25,7 +26,7 @@ hcl_palettes(plot = TRUE)
 ```
 You can use these palettes like so to produce a vector of colors:
 ```{r}
-sequential_hcl(10,"BurgYl")
+sequential_hcl(100,"BurgYl")
 qualitative_hcl(5,"Dynamic")
 diverging_hcl(20, "Lisbon")
 
@@ -40,8 +41,9 @@ demoplot(se,"scatter")
 Or in the `ggplot2` framework:
 ```{r}
 library("ggplot2")
-ggplot(iris, aes(x = Sepal.Length, fill = Species)) + geom_density(alpha = 0.6) +
-  scale_fill_discrete_qualitative(palette = "Dark 3")
+ggplot(iris, aes(x = Sepal.Length, fill = Species)) + 
+	geom_density(alpha = 0.6) + 
+	scale_fill_discrete_qualitative(palette = "Dark 2")
 
 dsamp <- diamonds[1 + 1:1000 * 50, ]
 ggplot(dsamp, aes(carat, price, color = cut)) + geom_point() +
@@ -50,9 +52,35 @@ ggplot(dsamp, aes(carat, price, color = cut)) + geom_point() +
 You can compose the different `scale_color_` functions using the same pattern.
 
 ## Discrete vs continuous color
+Only matters (probably) for Lexis surfaces and maps in general. Continuous colors are interpolated through your data as-is, where the min and max are mapped to the min and max of the given palette, and the color path goes through the control points that make up the given palette. If your surface is smooth, you'll see that, but it can be very hard to pick out trends in a smooth surface. Discrete colors reveal trends, but these may depend on the actual value intervals used to bin colors. 
+
+Check out Jonas Schöley's HMD explorer to remember the effect that continuous versus discrete colors can have on a map: [https://jschoeley.shinyapps.io/hmdexp/](https://jschoeley.shinyapps.io/hmdexp/)
 
 ## Background vs foreground
+```{r}
+library(HMDHFDplus)
+countries <- getHMDcountries()
+HMDe0 <- list()
+for (i in countries){
+	  HMDe0[[i]] <- readHMDweb(CNTRY = i,
+		         item = "E0per", 
+	  		     username = us, 
+	  		     password = pw)
+}
+library(tidyverse)
+HMDe0 <- bind_rows(HMDe0, .id = "Country")
 
+p <- ggplot(HMDe0, mapping = aes(x = Year, y = Male))
+p + geom_line(aes(group = Country), alpha = .3, color = gray(.5)) + 
+	xlim(1950,2017) + 
+	ylim(50,85) + 
+	geom_line(data=subset(HMDe0, Country == "USA"), color = "red",
+			  size = 2) + 
+	annotate(geom = "text", 
+			 label = "post Soviet\nmortality crisis",
+			 x = 1990,
+			 y = 60)
+```
 ## Points / lines vs areas
 
 ## geom_tile, geom_contour, geom_raster
