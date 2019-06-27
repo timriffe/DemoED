@@ -1,0 +1,31 @@
+---
+title: "Project Metadata"
+author: "Tim Riffe"
+date: "June 27, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Five projects?
+
+```{r, echo = FALSE, message = FALSE}
+require(knitr)
+require(kableExtra)
+require(tidyverse)
+kable(data.frame(First = c("JD","MK","MF","SK","NU"),
+		   Dataset = c("NHIS","NHIS","NHIS","HFC/WPP","NHIS"),
+		   Question = c("mig x mort/health", "Decomp LE/HLE", "insurance x mort","global TFR trends","poverty x mort/health"),
+		   Prep = rep("-",5),
+		   Analysis = rep("-",5),
+		   Concept = rep("-",5),
+		   Implement = rep("-",5),
+		   Draft = rep("-",5),
+		   SuppMat = rep("-",5))) %>% 
+   kable_styling(bootstrap_options = "striped", full_width = FALSE)
+```
+
+Remember, the objective is to have an impactful or policy-relevant result distilled in a single visualization. 
+
