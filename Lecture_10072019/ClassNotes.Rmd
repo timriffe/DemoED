@@ -1,0 +1,76 @@
+---
+title: "Class Notes"
+author: "Tim Riffe"
+date: "July 10, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# variable recoding
+
+Q: how to create a new variable with three categories based on two other variables.
+```{r, message = FALSE}
+library(tidyverse)
+A <- data.frame(v1 = sample(c(1,2,9), 50, replace = TRUE),
+				v2 = sample(c(1,2,9), 50, replace = TRUE)) %>% 
+	mutate(v3 = case_when(v1 == 1 ~ 1,          # most general case
+						  v1 == 2 & v2 == 1 ~ 2,
+						  v1 == 9 & v2 == 9 ~ 9,
+						  TRUE ~ 3, ))          # most specific case
+A # just check this yourself
+```
+
+
+# More examples of pipelines
+
+Here several `dplyr` verbs are showcased, but there are many many more. You can find a good overview here [https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+
+To reproduce this pipeline, you can get the data from this link:
+[https://drive.google.com/open?id=1AibPQP8plaGv0MaRwOJqqOg2LR6wXqK0](https://drive.google.com/open?id=1AibPQP8plaGv0MaRwOJqqOg2LR6wXqK0)
+
+```{r, message = FALSE}
+library(tidyverse)
+library(haven)
+JG         <- read_spss("caseid_aggr.sav")
+# in the original source.
+activities <- attr(JG$time_1000_max, "label")
+
+# reduce size so code runs faster while we test it.
+# skip this line when ready for final graph
+JG         <- sample_n(JG, 1000)
+
+# pipeline starts here!
+JG <- JG %>% 
+	gather(key = time,
+		   value = activity,
+		   time_1_max:time_1440_max) %>% 
+# now split the concatenated column called time
+# keeping the middle bit and converting it to integer
+	separate(col = time, 
+			 into = c(NA, "time", NA),
+			 sep = "_",
+			 remove = TRUE,
+			 convert = TRUE) %>% 
+	filter(time %% 10 == 1) %>%    # select every 10th minute
+	group_by(time, activity) %>%   
+	summarize(n = n()) %>%         # get frequencies
+	mutate(prop = n / sum(n)) %>% 
+	ungroup() %>% 
+	mutate(activity = factor(
+		activity,
+		levels = activities,
+		labels = names(activities)
+	)) 
+```
+
+Running this pipeline from start to end transforms the data in discrete steps to a tidy dataset that is handy for plotting. Here was the desired plot:
+
+```{r}
+ggplot(JG, mapping = aes(x = time, y = prop, fill = activity)) +
+	geom_area() +
+	# tone down the colors
+	scale_fill_discrete(c = 50, l = 80)
+```
