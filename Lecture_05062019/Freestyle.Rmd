@@ -163,6 +163,15 @@ newdata <- newdata %>% group_by(sex, age) %>%
 
 ggplot(subset(newdata, time == 0), mapping = aes(y = ex, x = as.character(age))) +
 	geom_col() + facet_wrap(~sex)
+```
 
+This was a oncye-off redux of the pipeline into old-fashioned greedy coding style
+```{r, eval = FALSE}
+coxstrata <- survfit(coxsmokesex, newdata = newdata)
+coxstrata <- tidy(coxstrata)
+coxstrata <- gather(coxstrata, key = "lx", value = "value", -time, -n.risk,-n.event,-n.censor)
+coxstrata <- mutate(coxstrata, strata = as.integer(str_extract(lx, "[[0-9]]")),
+		   lx = str_extract(lx, "[[a-z]]+.[[a-z]]*"),
+		   id = 1:n())
 
 ```
