@@ -1,0 +1,53 @@
+---
+title: "My project"
+author: "Tim Riffe"
+date: "7/11/2019"
+output: pdf_document
+bibliography: bibliography.bib
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Abstract
+
+Recommended length: 100 - 150 words (doesn't count against words)
+You can find a full description of the assignment here: [https://github.com/timriffe/DemoED/Projects.pdf](https://github.com/timriffe/DemoED/Projects.pdf)
+
+# Background
+Recommended length: ca 200 words
+ Here is an awesome citation of an awesome paper that really puts this in perspective @lee2001evaluating
+
+
+# Data and Methods
+Recommended length: ca 100 words
+```{r, results = "hide", echo = FALSE, message = FALSE, warning= FALSE}
+# Read in the data
+
+```
+
+```{r, results = "hide", echo = FALSE, message = FALSE, warning= FALSE}
+# prepare it for the model
+
+```
+
+```{r, results = "hide", echo = FALSE, message = FALSE, warning= FALSE}
+# do the model
+
+```
+
+```{r, results = "hide", echo = FALSE, message = FALSE, warning= FALSE}
+# tidy the output
+
+```
+
+# The visualization
+Make sure it includes a healthy informative self-sufficient caption. Doesn't count against word limit.
+```{r, echo = FALSE, message = FALSE, warning= FALSE}
+```
+
+# Discussion
+recommended length 100-200 words
+
+# References
