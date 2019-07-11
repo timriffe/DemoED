@@ -35,11 +35,7 @@ To reproduce this pipeline, you can get the data from this link:
 library(tidyverse)
 library(haven)
 JG         <- read_spss("caseid_aggr.sav")
-<<<<<<< HEAD
-head(JG[,1:30])
 
-=======
->>>>>>> ab2384e87a1495725bfdf923d25e160bd8cb492c
 # in the original source.
 activities <- attr(JG$time_1000_max, "label")
 
@@ -59,17 +55,13 @@ JG <- JG %>%
 			 sep = "_",
 			 remove = TRUE,
 			 convert = TRUE) %>% 
-<<<<<<< HEAD
 	filter(time %% 10 == 1) %>%  
 	# select every 10th minute
 	group_by(time, activity) %>%   
 	summarize(n = n()) %>% 
-	# get frequencies
-=======
 	filter(time %% 10 == 1) %>%    # select every 10th minute
 	group_by(time, activity) %>%   
 	summarize(n = n()) %>%         # get frequencies
->>>>>>> ab2384e87a1495725bfdf923d25e160bd8cb492c
 	mutate(prop = n / sum(n)) %>% 
 	ungroup() %>% 
 	mutate(activity = factor(
@@ -77,19 +69,11 @@ JG <- JG %>%
 		levels = activities,
 		labels = names(activities)
 	)) 
-<<<<<<< HEAD
-
-=======
->>>>>>> ab2384e87a1495725bfdf923d25e160bd8cb492c
 ```
 
 Running this pipeline from start to end transforms the data in discrete steps to a tidy dataset that is handy for plotting. Here was the desired plot:
 
 ```{r}
-<<<<<<< HEAD
-head(JG)
-=======
->>>>>>> ab2384e87a1495725bfdf923d25e160bd8cb492c
 ggplot(JG, mapping = aes(x = time, y = prop, fill = activity)) +
 	geom_area() +
 	# tone down the colors
