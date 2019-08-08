@@ -114,7 +114,7 @@ colnames(lx) <- paste(newdata$smoker, newdata$geschlecht, sep = "_")
 
 library(reshape2)
 lx <- melt(lx, value.name = "lx", varnames = c("Age", "Strata")) %>% 
-      separate(lx, Strata, into = c("smoker","sex"))
+      separate(lx, col = Strata, into = c("smoker", "sex"))
 
 ```
 
@@ -123,9 +123,9 @@ Hang on, let's do this for a properly working example. Then I'll go back and fix
 ```{r}
 glimpse(lung)
 out_cph <- coxph(Surv(time, status) ~ age + sex, data = lung, method="breslow", model=TRUE)
-out_fit <- survfit(out_cph)
+out_fit  <- survfit(out_cph)
 out_tidy <- tidy(out_fit)
-
+out_tidy
 
 p <- ggplot(out_tidy, mapping = aes(x = time, 
 									y = estimate, 
@@ -153,7 +153,7 @@ newdata <- newdata %>% group_by(sex, age) %>%
 	mutate(x = age + time / 365,
 		   haz = c(diff(estimate),5),
 		   ax = .125,
-		   qx = haz / (1 + (1-ax)*haz),
+		   qx = (.25 * haz) / (1 + (.25 - ax) * haz), # correction 8-Aug
 		   lx = cumprod(1-qx),
 		   dx = c(-diff(lx),lx[length(lx)]),
 		   Lx = lx - (1-ax)*dx,
@@ -174,4 +174,17 @@ coxstrata <- mutate(coxstrata, strata = as.integer(str_extract(lx, "[[0-9]]")),
 		   lx = str_extract(lx, "[[a-z]]+.[[a-z]]*"),
 		   id = 1:n())
 
+```
+
+
+
+Testing some more for `survexp()`
+
+```{r}
+library(survival)
+pfit <-coxph(Surv(time,status>0) ~ trt + log(bili) + log(protime) + age +
+                platelet, data=pbc)
+plot(survfit(Surv(time, status>0) ~ trt, data=pbc), mark.time=FALSE)
+lines(survexp( ~ trt, ratetable=pfit, data=pbc), col='purple')
+survexp( ~ trt, ratetable=pfit, data=pbc)
 ```
