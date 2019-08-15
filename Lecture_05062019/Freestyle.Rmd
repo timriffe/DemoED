@@ -152,17 +152,24 @@ Now let's do some dplyr magic to get all six expectancies, using the lifetable a
 newdata <- newdata %>% group_by(sex, age) %>%
 	mutate(x = age + time / 365,
 		   haz = c(diff(estimate),5),
-		   ax = .125,
-		   qx = (.25 * haz) / (1 + (.25 - ax) * haz), # correction 8-Aug
+		   int = .25,
+		   ax = int / 2,
+		   qx = (int * haz) / (1 + (int - ax) * haz), # correction 8-Aug
 		   lx = cumprod(1-qx),
 		   dx = c(-diff(lx),lx[length(lx)]),
-		   Lx = lx - (1-ax)*dx,
+		   Lx = int * lx - (int - ax) * dx,
 		   Tx = rev(cumsum(rev(Lx))),
 		   ex = Tx / lx
 	) %>% ungroup()
 
+newdata
+
 ggplot(subset(newdata, time == 0), mapping = aes(y = ex, x = as.character(age))) +
 	geom_col() + facet_wrap(~sex)
+
+ggplot(newdata, mapping = aes(y = haz, x = time, group = age)) +
+	geom_line() + facet_wrap(~sex) + scale_y_log10()
+
 ```
 
 This was a oncye-off redux of the pipeline into old-fashioned greedy coding style
